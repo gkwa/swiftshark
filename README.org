@@ -23,7 +23,14 @@ Specify output format:
 
 #+begin_src sh
 swiftshark fetch peeled frozen shrimp --format "category#domain#product"
+swiftshark fetch peeled frozen shrimp --out json
 #+end_src
+
+Available output formats:
+- category#domain#product (default)
+- domain#product
+- pretty (includes URL if available)
+- json (includes all product data including URL and category)
 
 Increase verbosity:
 

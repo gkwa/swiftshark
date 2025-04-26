@@ -1,5 +1,6 @@
 """Formatter module for output formatting."""
 
+import json
 import logging
 import typing
 
@@ -40,8 +41,21 @@ class OutputFormatter:
             for p in products:
                 formatted.append(f"Domain: {p['domain']}")
                 formatted.append(f"Product: {p['name']}")
+                if p.get("url"):
+                    formatted.append(f"URL: {p['url']}")
                 formatted.append("")
             return formatted
+
+        elif self.format_type == "json":
+            # Add category to each product for the JSON output
+            enriched_products = []
+            for p in products:
+                product = p.copy()
+                product["category"] = category
+                enriched_products.append(product)
+
+            # Return a single-element list with the JSON string
+            return [json.dumps(enriched_products, indent=2)]
 
         # Default format
         return [f"{category}#{p['domain']}#{p['name']}" for p in products]

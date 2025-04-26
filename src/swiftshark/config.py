@@ -12,3 +12,4 @@ class AppConfig:
     category: str
     output_format: str
     verbosity: int
+    filter_discriminators: bool = False

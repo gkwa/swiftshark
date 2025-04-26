@@ -15,18 +15,33 @@ def setup_args():
     parser = argparse.ArgumentParser(description="Fetch product data from DynamoDB")
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
-    # Fetch command
-    fetch_parser = subparsers.add_parser("fetch", help="Fetch products for a category")
-    fetch_parser.add_argument("category", help="Product category to fetch", nargs="+")
-    fetch_parser.add_argument(
+    # Categories command (renamed from fetch)
+    categories_parser = subparsers.add_parser(
+        "categories", aliases=["cat"], help="Fetch products for a category"
+    )
+    categories_parser.add_argument(
+        "category", help="Product category to fetch", nargs="+"
+    )
+    categories_parser.add_argument(
         "--table", help="DynamoDB table name", default="dreamydungbeetle"
     )
-    fetch_parser.add_argument("--region", help="AWS region", default="us-east-1")
-    fetch_parser.add_argument(
+    categories_parser.add_argument("--region", help="AWS region", default="us-east-1")
+    categories_parser.add_argument(
         "--format",
         help="Output format",
-        choices=["category#domain#product", "domain#product", "pretty"],
+        choices=["category#domain#product", "domain#product", "pretty", "json"],
         default="category#domain#product",
+    )
+    categories_parser.add_argument(
+        "--out",
+        help="Output format (alias for --format)",
+        choices=["category#domain#product", "domain#product", "pretty", "json"],
+    )
+    categories_parser.add_argument(
+        "--no-discriminators",
+        action="store_true",
+        help="Filter out products with discriminator suffixes (e.g., #1, #2)",
+        default=False,
     )
 
     # Common arguments
@@ -50,26 +65,35 @@ def main():
     logger = logging.getLogger(__name__)
 
     if not args.command:
-        logger.error("No command specified. Use 'swiftshark fetch' to fetch products.")
+        logger.error(
+            "No command specified. Use 'swiftshark categories' to fetch products."
+        )
         sys.exit(1)
 
-    if args.command == "fetch":
+    # Handle both "categories" and its alias "cat"
+    if args.command in ["categories", "cat"]:
         # Join the category words if they were passed as separate arguments
         category = " ".join(args.category)
+
+        # Use --out if provided, otherwise use --format
+        output_format = args.out if args.out else args.format
 
         config = swiftshark.config.AppConfig(
             table_name=args.table,
             region=args.region,
             category=category,
-            output_format=args.format,
+            output_format=output_format,
             verbosity=verbosity_level,
+            filter_discriminators=args.no_discriminators,
         )
 
         logger.debug(f"Configuration: {config}")
 
         try:
             dynamodb_service = swiftshark.dynamodb_service.DynamoDBService(
-                table_name=config.table_name, region=config.region
+                table_name=config.table_name,
+                region=config.region,
+                filter_discriminators=config.filter_discriminators,
             )
 
             products = dynamodb_service.fetch_products_by_category(config.category)
