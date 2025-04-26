@@ -1,0 +1,34 @@
+#+TITLE: Swiftshark
+#+AUTHOR: Taylor Monacelli
+
+* Swiftshark
+
+A utility for retrieving product data from DynamoDB.
+
+** Installation
+
+#+begin_src sh
+pip install .
+#+end_src
+
+** Usage
+
+Fetch products for a specific category:
+
+#+begin_src sh
+swiftshark fetch peeled frozen shrimp
+#+end_src
+
+Specify output format:
+
+#+begin_src sh
+swiftshark fetch peeled frozen shrimp --format "category#domain#product"
+#+end_src
+
+Increase verbosity:
+
+#+begin_src sh
+swiftshark fetch peeled frozen shrimp -v
+swiftshark fetch peeled frozen shrimp -vv
+swiftshark fetch peeled frozen shrimp -vvv
+#+end_src
