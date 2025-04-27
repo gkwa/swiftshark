@@ -43,7 +43,7 @@ class DynamoDBService:
             category: The product category to query
 
         Returns:
-            A list of product dictionaries with domain and name keys
+            A list of product dictionaries with all available fields
         """
         self.logger.debug(f"Querying DynamoDB for category: {category}")
 
@@ -52,24 +52,20 @@ class DynamoDBService:
             TableName=self.table_name,
             KeyConditionExpression="category = :cat",
             ExpressionAttributeValues={":cat": {"S": category}},
-            ProjectionExpression="category, #dom, #nm, #ts, #url",
-            ExpressionAttributeNames={
-                "#dom": "domain",
-                "#nm": "name",
-                "#ts": "timestamp",
-                "#url": "url",
-            },
         )
 
         products = []
         for page in page_iterator:
             for item in page.get("Items", []):
-                product_data = {
-                    "domain": item.get("domain", {}).get("S", "unknown"),
-                    "name": item.get("name", {}).get("S", "unknown"),
-                    "timestamp": item.get("timestamp", {}).get("S", ""),
-                    "url": item.get("url", {}).get("S", ""),
-                }
+                # Extract all fields from the DynamoDB item
+                product_data = {}
+                for key, value in item.items():
+                    # Extract the actual value from DynamoDB type object
+                    # (e.g., {"S": "value"} -> "value")
+                    for type_key, actual_value in value.items():
+                        product_data[key] = actual_value
+                        break  # We only need the first type/value pair
+
                 products.append(product_data)
 
         self.logger.debug(f"Found {len(products)} products for category: {category}")
